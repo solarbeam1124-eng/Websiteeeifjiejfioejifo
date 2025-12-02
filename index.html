@@ -2,15 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My roblox pip: how has roblox changed throughout the years</title>
+  <title>Roblox Evolution Maze</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
       --bg: #0b1220;
-      --accent: #ff3355;
       --text: #eaf2ff;
-      --panel: #131a2a;
-      --panel2: #0f1626;
       --btn: #ff3355;
       --btnText: #ffffff;
     }
@@ -20,103 +17,36 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: radial-gradient(1200px 600px at 20% 10%, #0f1d3a 0%, #0b1220 60%, #050a16 100%);
       color: var(--text);
-      display: grid;
       min-height: 100vh;
+      display: grid;
       grid-template-rows: auto 1fr auto;
     }
     header {
-      padding: 20px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
+      padding: 16px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
     }
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-      letter-spacing: 0.5px;
-    }
-    header .subtitle {
-      opacity: 0.8;
-      font-size: 14px;
-      margin-top: 6px;
-    }
-    main {
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 18px;
-      padding: 18px;
-      align-items: start;
-    }
+    header h1 { margin: 0; font-size: 22px; letter-spacing: 0.3px; }
+    header .subtitle { opacity: 0.8; font-size: 13px; margin-top: 6px; }
+
+    main { padding: 12px; }
     #stage {
       background: #0a1120;
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 12px;
       position: relative;
       overflow: hidden;
-      min-height: 520px;
+      min-height: 560px;
       display: grid;
       place-items: center;
     }
-    #hud {
-      background: var(--panel);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 14px;
-      display: grid;
-      gap: 10px;
-    }
-    #hud h2 { font-size: 16px; margin: 0; }
-    .row { display: flex; gap: 10px; align-items: center; }
-    .badge {
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    #info {
-      background: var(--panel2);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 13px;
-      line-height: 1.45;
-      max-height: 200px;
-      overflow: auto;
-      white-space: pre-wrap;
-    }
-    #controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-    button {
-      appearance: none;
-      background: var(--btn);
-      color: var(--btnText);
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.08s ease, filter 0.12s ease;
-    }
-    button:hover { filter: brightness(1.05); }
-    button:active { transform: translateY(1px); }
-    #playBtn { font-size: 16px; padding: 12px 18px; }
     canvas {
       width: 100%;
       height: 100%;
-      max-width: 880px;
-      max-height: 520px;
+      max-width: 980px;
+      max-height: 560px;
       border-radius: 12px;
-      image-rendering: pixelated; /* retro look */
-    }
-    footer {
-      padding: 16px;
-      opacity: 0.75;
-      font-size: 12px;
-      text-align: center;
+      image-rendering: pixelated;
     }
     .overlay {
       position: absolute;
@@ -134,15 +64,11 @@
       max-width: 640px;
       text-align: center;
     }
-    .title {
-      font-weight: 800; letter-spacing: 0.5px; margin-bottom: 10px;
-    }
-    .hint { font-size: 13px; opacity: 0.85; margin-top: 6px; }
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-top: 8px;
+      margin: 8px 0 14px;
     }
     .chip {
       background: rgba(255,255,255,0.08);
@@ -150,6 +76,25 @@
       padding: 8px;
       border-radius: 10px;
       font-size: 12px;
+    }
+    button {
+      appearance: none;
+      background: var(--btn);
+      color: var(--btnText);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.08s ease, filter 0.12s ease;
+    }
+    button:hover { filter: brightness(1.05); }
+    button:active { transform: translateY(1px); }
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
     }
 
     /* Top banner narrative */
@@ -168,88 +113,92 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 1.0s ease;
-      max-width: 80%;
+      max-width: 84%;
       text-align: center;
       backdrop-filter: blur(4px);
     }
     #banner.show { opacity: 1; }
+
+    footer {
+      padding: 14px;
+      opacity: 0.75;
+      font-size: 12px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>ROBLOX PIP: how has roblox change throughout the years</h1>
-    <div class="subtitle">Move through three eras of the maze and learn how the platform Roblox evolved.</div>
+    <h1>ROBLOX Evolution Maze</h1>
+    <div class="subtitle">Full-screen mazes with era-specific narration. Use W A S D or Arrow Keys.</div>
   </header>
 
   <main>
     <section id="stage">
-      <canvas id="game" width="880" height="520"></canvas>
+      <canvas id="game" width="980" height="560"></canvas>
       <div id="banner"></div>
       <div id="overlay" class="overlay">
         <div class="card">
-          <div class="title">Press Play to Begin</div>
-          <div>W A S D or Arrow Keys to move.</div>
+          <div style="font-weight:800; margin-bottom:8px;">Press Play to Begin</div>
+          <div>Reach the flag in each maze to advance eras. W A S D or Arrow Keys to move.</div>
           <div class="grid">
-            <div class="chip">2006 • 2006 avatar</div>
-            <div class="chip">2018 • 2018 avatar</div>
-            <div class="chip">2025 • 2025 avatar</div>
+            <div class="chip">2006 • 6‑bit avatar</div>
+            <div class="chip">2016 • 16‑bit avatar</div>
+            <div class="chip">2025 • Bacon avatar</div>
           </div>
-          <div class="hint">Tip: Hug the walls and watch for openings.</div>
-          <button id="playBtn">Play</button>
+          <div class="controls">
+            <button id="playBtn">Play</button>
+            <button id="resetBtn" title="Restart from era 2006">Reset</button>
+            <button id="pauseBtn">Pause</button>
+          </div>
         </div>
       </div>
     </section>
-
-    <aside id="hud">
-      <h2>Session</h2>
-      <div class="row">
-        <span class="badge" id="eraBadge">Era: 2006</span>
-        <span class="badge" id="levelBadge">Maze: 1/3</span>
-        <span class="badge" id="timeBadge">Time: 00:00</span>
-      </div>
-      <div id="controls">
-        <button id="resetBtn" title="Restart from era 2006">Reset</button>
-        <button id="pauseBtn">Pause</button>
-      </div>
-      <div id="info"></div>
-    </aside>
   </main>
 
   <footer>
-    Use W A S D or Arrow Keys to move. Each bit of info shows as you walk and fades away.
+    Tip: Hug the walls and watch for openings. Each era’s text appears at the top as you walk.
   </footer>
 
   <script>
-    // --- Game constants
+    // --- Constants & themes
     const TILE = 40;
-    const SPEEDS = { "2006": 2.2, "2018": 2.8, "2025": 3.3 };
+    const SPEEDS = { "2006": 2.2, "2016": 2.8, "2025": 3.3 };
     const THEMES = {
       "2006": { wall: "#1b2a41", floor: "#0a1324", avatar: "#a2ff00", detail: 6 },
-      "2018": { wall: "#263b66", floor: "#101b33", avatar: "#ffcc00", detail: 16 },
+      "2016": { wall: "#263b66", floor: "#101b33", avatar: "#ffcc00", detail: 16 },
       "2025": { wall: "#2e4a88", floor: "#121f3e", avatar: "#ff3355", detail: 32 } // Bacon vibe
     };
 
-    // --- Narrative sentences (base)
-    const narrativeBase = [
-      "Roblox has undergone a remarkable transformation since its launch in 2006.",
-      "Originally a simple platform for physics-based games and user-generated content, it evolved into a vast digital ecosystem.",
-      "Roblox Studio gave developers powerful tools; shifting from dual currency to Robux streamlined its economy.",
-      "Roblox expanded beyond PC to mobile, console, and VR — reaching a global audience.",
-      "Today, Roblox is a social and creative hub with virtual concerts, education, and a thriving creator economy.",
-      "Developers earn real income, and players explore millions of games across genres.",
-      "With over 85 million daily users and major brand partnerships, Roblox reshaped digital interaction."
-    ];
-
-    // Era-specific banner prefix lines
-    const ERA_PREFIX = {
-      "2006": "Era 2006 • 6‑bit avatar",
-      "2018": "Era 2018 • 16‑bit avatar",
-      "2025": "Era 2025 • Bacon avatar"
+    // --- Era narratives (each era has its own text)
+    const ERA_TEXT = {
+      "2006": [
+        "Era 2006 • 6‑bit avatar",
+        "Roblox launched as a physics sandbox with user-generated worlds.",
+        "Early avatars were simple blocky figures and classic hats.",
+        "Community scripts and basic building tools drove creativity.",
+        "Dual currency (Tickets & Robux) shaped the early economy."
+      ],
+      "2016": [
+        "Era 2016 • 16‑bit avatar",
+        "Roblox Studio matured with plugins and better publishing.",
+        "Shift toward Robux-only economy simplified transactions.",
+        "Mobile and console support broadened access worldwide.",
+        "Emerging dev marketplace and events boosted creators."
+      ],
+      "2025": [
+        "Era 2025 • Bacon avatar",
+        "Roblox is a social/creative hub with concerts & education.",
+        "Millions of experiences across genres, global community.",
+        "Creators earn income; UGC and brands expand the ecosystem.",
+        "Cross-platform, VR experiments, and evolving avatar fidelity."
+      ]
     };
 
-    // --- Mazes: 1=2006, 2=2018, 3=2025
+    // --- Mazes (solvable)
+    // Legend: #=wall, .=path, S=start, G=goal
     const mazes = [
-      {
+      { // 2006: compact, solvable
         era: "2006",
         grid: [
           "###############",
@@ -269,33 +218,33 @@
           "###############"
         ]
       },
-      {
-        era: "2018",
+      { // 2016: widened corridors, ensured route from S to G
+        era: "2016",
         grid: [
           "####################",
           "#S..#.....#......#G#",
-          "#.#.#.###.#.####...#",
-          "#.#...#...#....#...#",
-          "#.#####.#####.#.#.#.",
-          "#.....#.....#.#...#.",
-          "###.#.#.###.#.###.#.",
-          "#...#.#...#.#...#.#.",
-          "#.###.###.#.###.#.#.",
-          "#...#.....#.....#.#.",
-          "###.#######.#####.#.",
-          "#...#.....#.....#.#.",
+          "#.#.#.###.#.####.#.#",
+          "#.#...#...#....#.#.#",
+          "#.#####.#####.#.#..#",
+          "#.....#.....#.#...##",
+          "###.#.#.###.#.###..#",
+          "#...#.#...#.#...#..#",
+          "#.###.###.#.###.#..#",
+          "#...#.....#.....#..#",
+          "###.#######.#####..#",
+          "#...#.....#.....#..#",
           "##.#.#.###.#.###.#.#",
           "#.....#...#.....#..#",
           "####################"
         ]
       },
-      {
+      { // 2025: longer, but with multiple clear passages
         era: "2025",
         grid: [
           "########################",
-          "#S.....#............#..#",
+          "#S.....#....#.......#..#",
           "#.###..#.##.#.#######..#",
-          "#...#.......#.....#....#",
+          "#...#..#....#.....#....#",
           "###.#..######.###.#.####",
           "#...#.......#...#.#....#",
           "#.#####.#####.#.#.####.#",
@@ -306,8 +255,8 @@
           "#.....#...#...#..#.#.#.#",
           "#####.#.#####.#.##.#.#.#",
           "#.....#.......#....#...#",
-          "#.#############.######.#",
-          "#..............#.....#G#",
+          "#.###.#.#####.#.###.#..#",
+          "#...#.#.....#.#...#.#G.#",
           "########################"
         ]
       }
@@ -320,10 +269,6 @@
     const playBtn = document.getElementById("playBtn");
     const resetBtn = document.getElementById("resetBtn");
     const pauseBtn = document.getElementById("pauseBtn");
-    const infoEl = document.getElementById("info");
-    const eraBadge = document.getElementById("eraBadge");
-    const levelBadge = document.getElementById("levelBadge");
-    const timeBadge = document.getElementById("timeBadge");
     const bannerEl = document.getElementById("banner");
 
     // --- State
@@ -334,46 +279,21 @@
     let paused = false;
     let startTime = 0;
     let lastTime = 0;
-
     const keys = new Set();
 
-    // Narrative queue & movement-trigger
+    // Banner state
     let bannerQueue = [];
     let bannerShowing = false;
-    let distAcc = 0; // distance accumulator to trigger sentences
-    const DIST_PER_SENTENCE = 120; // pixels walked per sentence trigger
-    const BANNER_SHOW_MS = 2800; // visible duration
-    const BANNER_FADE_MS = 1000; // fade in/out controlled via CSS
+    let distAcc = 0;
+    const DIST_PER_SENTENCE = 120;
+    const BANNER_SHOW_MS = 2800;
+    const BANNER_FADE_MS = 1000;
 
-    function formatTime(ms) {
-      const s = Math.floor(ms / 1000);
-      const mm = String(Math.floor(s / 60)).padStart(2, "0");
-      const ss = String(s % 60).padStart(2, "0");
-      return `${mm}:${ss}`;
-    }
-
-    function setInfo(lines) {
-      infoEl.textContent = lines.join("\n");
-    }
-
-    function pushNarrative(era) {
-      // Update side panel with full context
-      const prefix =
-        era === "2006" ? "Era 2006 • 6‑bit avatar\n" :
-        era === "2018" ? "Era 2018 • 16‑bit avatar\n" :
-        "Era 2025 • Bacon avatar\n";
-      setInfo([prefix, ...narrativeBase]);
-
-      // Prepare top banner queue: show prefix first, then sentences one-by-one
-      bannerQueue = [ERA_PREFIX[era], ...narrativeBase];
-      distAcc = 0; // reset distance gate
-    }
-
+    // --- Helpers
     function showBannerOnce(text) {
       bannerShowing = true;
       bannerEl.textContent = text;
       bannerEl.classList.add("show");
-      // Hide after duration
       setTimeout(() => {
         bannerEl.classList.remove("show");
         setTimeout(() => {
@@ -415,12 +335,12 @@
       const era = mazes[currentLevel].era;
       pos = { x: maze.start.x * TILE + TILE/2, y: maze.start.y * TILE + TILE/2 };
       vel = { x: 0, y: 0 };
-      eraBadge.textContent = `Era: ${era}`;
-      levelBadge.textContent = `Maze: ${currentLevel + 1}/3`;
-      pushNarrative(era);
-      // Immediately show the first line (era prefix) when the level starts
+      // Prepare banner for era
+      bannerQueue = [...ERA_TEXT[era]];
+      distAcc = 0;
+      // Announce the first line immediately
       if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
-      draw(0); // immediate draw
+      draw(0);
     }
 
     function tileAt(px, py) {
@@ -464,15 +384,11 @@
       const nextX = pos.x + vel.x;
       const nextY = pos.y + vel.y;
 
-      // Move with collision
       if (!collide(nextX, pos.y)) pos.x = nextX;
       if (!collide(pos.x, nextY)) pos.y = nextY;
 
-      // Distance walked this frame
       const deltaDist = Math.hypot(pos.x - prevX, pos.y - prevY);
-      if (deltaDist > 0) {
-        maybePopBannerByWalk(deltaDist);
-      }
+      if (deltaDist > 0) maybePopBannerByWalk(deltaDist);
     }
 
     function drawGrid(theme) {
@@ -487,7 +403,6 @@
             ctx.fillStyle = theme.wall;
             ctx.fillRect(px, py, TILE, TILE);
           } else if (tile === "G") {
-            // goal flag
             ctx.fillStyle = "#22c55e";
             ctx.fillRect(px + 8, py + 8, TILE - 16, TILE - 16);
             ctx.fillStyle = "#14a34a";
@@ -533,19 +448,12 @@
           maze = parseMaze(currentLevel);
           const era = mazes[currentLevel].era;
           pos = { x: maze.start.x * TILE + TILE/2, y: maze.start.y * TILE + TILE/2 };
-          pushNarrative(era);
-          // Immediately announce the new era
+          bannerQueue = [...ERA_TEXT[era]];
+          distAcc = 0;
           if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
-          eraBadge.textContent = `Era: ${era}`;
-          levelBadge.textContent = `Maze: ${currentLevel + 1}/3`;
         } else {
-          setInfo([
-            "You reached the 2025 Bacon avatar finale!",
-            "",
-            ...narrativeBase,
-            "",
-            "Thanks for exploring the Roblox evolution. Press Reset to play again."
-          ]);
+          bannerQueue = ["Finale reached! Thanks for exploring the Roblox evolution."];
+          showBannerOnce(bannerQueue.shift());
           paused = true;
         }
       }
@@ -555,10 +463,7 @@
       const theme = THEMES[mazes[currentLevel].era];
       drawGrid(theme);
       drawAvatar(theme);
-      if (started && !paused) {
-        checkGoal();
-      }
-      timeBadge.textContent = `Time: ${formatTime((started && !paused) ? (timestamp - startTime) : (lastTime - startTime))}`;
+      if (started && !paused) checkGoal();
     }
 
     function loop(timestamp) {
@@ -580,25 +485,23 @@
       if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
       keys.add(e.code);
     });
-    window.addEventListener("keyup", (e) => {
-      keys.delete(e.code);
-    });
+    window.addEventListener("keyup", (e) => { keys.delete(e.code); });
 
-    playBtn.addEventListener("click", () => {
+    document.getElementById("playBtn").addEventListener("click", () => {
       overlay.style.display = "none";
       started = true;
       paused = false;
       startTime = performance.now();
     });
-    resetBtn.addEventListener("click", () => {
+    document.getElementById("resetBtn").addEventListener("click", () => {
       overlay.style.display = "grid";
       started = false;
       paused = false;
       resetLevel(0);
     });
-    pauseBtn.addEventListener("click", () => {
+    document.getElementById("pauseBtn").addEventListener("click", () => {
       paused = !paused;
-      pauseBtn.textContent = paused ? "Resume" : "Pause";
+      document.getElementById("pauseBtn").textContent = paused ? "Resume" : "Pause";
     });
 
     // --- Init
