@@ -151,6 +151,28 @@
       border-radius: 10px;
       font-size: 12px;
     }
+
+    /* Top banner narrative */
+    #banner {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18,26,42,0.85);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.35;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.0s ease;
+      max-width: 80%;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    #banner.show { opacity: 1; }
   </style>
 </head>
 <body>
@@ -162,6 +184,7 @@
   <main>
     <section id="stage">
       <canvas id="game" width="880" height="520"></canvas>
+      <div id="banner"></div>
       <div id="overlay" class="overlay">
         <div class="card">
           <div class="title">Press Play to Begin</div>
@@ -193,7 +216,7 @@
   </main>
 
   <footer>
-    Use W A S D or Arrow Keys to move. Reach the flag to advance. Content auto‑updates as you progress.
+    Use W A S D or Arrow Keys to move. Each bit of info shows as you walk and fades away.
   </footer>
 
   <script>
@@ -206,7 +229,7 @@
       "2025": { wall: "#2e4a88", floor: "#121f3e", avatar: "#ff3355", detail: 32 } // Bacon vibe
     };
 
-    // --- Narrative text
+    // --- Narrative sentences (base)
     const narrativeBase = [
       "Roblox has undergone a remarkable transformation since its launch in 2006.",
       "Originally a simple platform for physics-based games and user-generated content, it evolved into a vast digital ecosystem.",
@@ -216,6 +239,13 @@
       "Developers earn real income, and players explore millions of games across genres.",
       "With over 85 million daily users and major brand partnerships, Roblox reshaped digital interaction."
     ];
+
+    // Era-specific banner prefix lines
+    const ERA_PREFIX = {
+      "2006": "Era 2006 • 6‑bit avatar",
+      "2018": "Era 2018 • 16‑bit avatar",
+      "2025": "Era 2025 • Bacon avatar"
+    };
 
     // --- Mazes: 1=2006, 2=2018, 3=2025
     const mazes = [
@@ -294,6 +324,7 @@
     const eraBadge = document.getElementById("eraBadge");
     const levelBadge = document.getElementById("levelBadge");
     const timeBadge = document.getElementById("timeBadge");
+    const bannerEl = document.getElementById("banner");
 
     // --- State
     let currentLevel = 0;
@@ -306,7 +337,14 @@
 
     const keys = new Set();
 
-    // --- Helpers
+    // Narrative queue & movement-trigger
+    let bannerQueue = [];
+    let bannerShowing = false;
+    let distAcc = 0; // distance accumulator to trigger sentences
+    const DIST_PER_SENTENCE = 120; // pixels walked per sentence trigger
+    const BANNER_SHOW_MS = 2800; // visible duration
+    const BANNER_FADE_MS = 1000; // fade in/out controlled via CSS
+
     function formatTime(ms) {
       const s = Math.floor(ms / 1000);
       const mm = String(Math.floor(s / 60)).padStart(2, "0");
@@ -319,11 +357,42 @@
     }
 
     function pushNarrative(era) {
+      // Update side panel with full context
       const prefix =
         era === "2006" ? "Era 2006 • 6‑bit avatar\n" :
         era === "2018" ? "Era 2018 • 16‑bit avatar\n" :
         "Era 2025 • Bacon avatar\n";
       setInfo([prefix, ...narrativeBase]);
+
+      // Prepare top banner queue: show prefix first, then sentences one-by-one
+      bannerQueue = [ERA_PREFIX[era], ...narrativeBase];
+      distAcc = 0; // reset distance gate
+    }
+
+    function showBannerOnce(text) {
+      bannerShowing = true;
+      bannerEl.textContent = text;
+      bannerEl.classList.add("show");
+      // Hide after duration
+      setTimeout(() => {
+        bannerEl.classList.remove("show");
+        setTimeout(() => {
+          bannerShowing = false;
+          bannerEl.textContent = "";
+        }, BANNER_FADE_MS);
+      }, BANNER_SHOW_MS);
+    }
+
+    function maybePopBannerByWalk(deltaDist) {
+      if (!started || paused) return;
+      distAcc += deltaDist;
+      if (bannerShowing) return;
+      if (bannerQueue.length === 0) return;
+      if (distAcc >= DIST_PER_SENTENCE) {
+        distAcc = 0;
+        const next = bannerQueue.shift();
+        showBannerOnce(next);
+      }
     }
 
     function parseMaze(level) {
@@ -349,6 +418,8 @@
       eraBadge.textContent = `Era: ${era}`;
       levelBadge.textContent = `Maze: ${currentLevel + 1}/3`;
       pushNarrative(era);
+      // Immediately show the first line (era prefix) when the level starts
+      if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
       draw(0); // immediate draw
     }
 
@@ -360,7 +431,6 @@
     }
 
     function collide(nextX, nextY, radius = 12) {
-      // Check 4 corners around the avatar circle
       const points = [
         { x: nextX - radius, y: nextY - radius },
         { x: nextX + radius, y: nextY - radius },
@@ -381,6 +451,9 @@
       if (keys.has("ArrowDown") || keys.has("KeyS")) dy += 1;
       if (keys.has("ArrowLeft") || keys.has("KeyA")) dx -= 1;
       if (keys.has("ArrowRight") || keys.has("KeyD")) dx += 1;
+
+      const prevX = pos.x, prevY = pos.y;
+
       if (dx || dy) {
         const len = Math.hypot(dx, dy) || 1;
         vel.x = (dx / len) * speed * TILE * (dt / 1000);
@@ -390,8 +463,16 @@
       }
       const nextX = pos.x + vel.x;
       const nextY = pos.y + vel.y;
+
+      // Move with collision
       if (!collide(nextX, pos.y)) pos.x = nextX;
       if (!collide(pos.x, nextY)) pos.y = nextY;
+
+      // Distance walked this frame
+      const deltaDist = Math.hypot(pos.x - prevX, pos.y - prevY);
+      if (deltaDist > 0) {
+        maybePopBannerByWalk(deltaDist);
+      }
     }
 
     function drawGrid(theme) {
@@ -426,20 +507,16 @@
     function drawAvatar(theme) {
       const { detail } = theme;
       const size = 22 + Math.min(detail, 24) * 0.3;
-      // Body (retro pixel-ish blocks)
       ctx.fillStyle = theme.avatar;
       ctx.fillRect(pos.x - size/2, pos.y - size/2, size, size);
-      // Face stripe to hint evolution detail
       ctx.fillStyle = "rgba(255,255,255,0.85)";
       ctx.fillRect(pos.x - size/2 + 3, pos.y - size/2 + 6, size - 6, 4);
-      // Hair (bacon = reddish streaks in 2025)
       if (detail >= 32) {
         ctx.fillStyle = "#ff667f";
         ctx.fillRect(pos.x - size/2 + 2, pos.y - size/2 + 2, size - 4, 3);
         ctx.fillStyle = "#cc2e48";
         ctx.fillRect(pos.x - size/2 + 2, pos.y - size/2 + 6, size - 4, 3);
       }
-      // Shadow
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.beginPath();
       ctx.arc(pos.x, pos.y + size/2, size/2.2, 0, Math.PI * 2);
@@ -451,17 +528,17 @@
       const gy = maze.goal.y * TILE + TILE/2;
       const d = Math.hypot(pos.x - gx, pos.y - gy);
       if (d < 20) {
-        // Advance
         if (currentLevel < mazes.length - 1) {
           currentLevel++;
           maze = parseMaze(currentLevel);
           const era = mazes[currentLevel].era;
           pos = { x: maze.start.x * TILE + TILE/2, y: maze.start.y * TILE + TILE/2 };
           pushNarrative(era);
+          // Immediately announce the new era
+          if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
           eraBadge.textContent = `Era: ${era}`;
           levelBadge.textContent = `Maze: ${currentLevel + 1}/3`;
         } else {
-          // Completed
           setInfo([
             "You reached the 2025 Bacon avatar finale!",
             "",
