@@ -100,7 +100,7 @@
     </div>
   </div>
   <script>
-    // Canvas & constants
+    // ---- DOM & constants
     const TILE = 40;
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
@@ -110,7 +110,7 @@
     const resetBtn = document.getElementById("resetBtn");
     const pauseBtn = document.getElementById("pauseBtn");
 
-    // Themes per era (colors)
+    // ---- Themes per era
     const THEMES = {
       "2006": { wall:"#1b2a41", floor:"#0a1324", avatar:"#a2ff00" },
       "2012": { wall:"#3a1b41", floor:"#1a0a24", avatar:"#00ffff" },
@@ -121,7 +121,7 @@
       "2025": { wall:"#2e4a88", floor:"#121f3e", avatar:"#ff3355" }
     };
 
-    // Era narratives
+    // ---- Era narratives
     const ERA_TEXT = {
       "2006": ["Era 2006 • 6-bit avatar","Roblox launched as a physics sandbox.","Tickets & Robux shaped the early economy."],
       "2012": ["Era 2012 • 8-bit avatar","Badges and improved avatars.","Community events expanded."],
@@ -132,21 +132,27 @@
       "2025": ["Era 2025 • Bacon avatar","VR & brands integrated.","Social hub."]
     };
 
-    // Banner timing
+    // ---- Banner timing (8 seconds visible)
     const BANNER_SHOW_MS = 8000;
     const BANNER_FADE_MS = 1500;
+    const DIST_PER_SENTENCE = 120;
 
-    // Eras list
+    // ---- Era list
     const ERAS = ["2006","2012","2015","2016","2018","2020","2025"];
 
-    // Random maze generator (DFS on odd cells)
+    // ---- Random maze generator (DFS)
     function generateMaze(width, height) {
-      // Ensure odd dimensions for proper carving
-      if (width % 2 === 0) width += 1;
-      if (height % 2 === 0) height += 1;
+      if (width % 2 === 0) width++;
+      if (height % 2 === 0) height++;
       const grid = Array.from({length:height}, () => Array(width).fill("#"));
 
-      function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+      function shuffle(arr){
+        for(let i=arr.length-1;i>0;i--){
+          const j=Math.floor(Math.random()*(i+1));
+          [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+        return arr;
+      }
 
       function carve(cx, cy) {
         const dirs = shuffle([[2,0],[-2,0],[0,2],[0,-2]]);
@@ -160,14 +166,11 @@
         }
       }
 
-      // Start and carve
       grid[1][1] = ".";
-      carve(1, 1);
+      carve(1,1);
 
-      // Place start and goal on open tiles near corners
+      // Place start near top-left; goal on an open tile near bottom-right
       grid[1][1] = "S";
-      grid[height-2][width-2] = ".";
-      // Find nearest open tile to bottom-right for G
       let gx = width-2, gy = height-2;
       for (let y = height-2; y >= 1; y--) {
         for (let x = width-2; x >= 1; x--) {
@@ -175,11 +178,10 @@
         }
       }
       grid[gy][gx] = "G";
-
       return grid;
     }
 
-    // Sprinkle traps on open floor tiles (avoid start/goal)
+    // ---- Sprinkle traps (T) on open tiles
     function sprinkleTraps(grid, count = 5) {
       const coords = [];
       for (let y = 1; y < grid.length-1; y++) {
@@ -189,15 +191,13 @@
       }
       for (let i = 0; i < Math.min(count, coords.length); i++) {
         const [x,y] = coords[Math.floor(Math.random()*coords.length)];
-        // Avoid overwriting start/goal
-        if (grid[y][x] === "." ) grid[y][x] = "T";
+        if (grid[y][x] === ".") grid[y][x] = "T";
       }
       return grid;
     }
 
-    // Place a key somewhere reachable (centerish) if required
+    // ---- Place a key (K) if era requires one
     function placeKey(grid) {
-      // Try center region, fall back to any open tile
       const cy = Math.floor(grid.length/2);
       const cx = Math.floor(grid[0].length/2);
       if (grid[cy][cx] === ".") {
@@ -212,21 +212,19 @@
       return grid;
     }
 
-    // Build initial mazes per era
+    // ---- Build a maze per era index
     function buildMazeForEra(eraIndex) {
-      const requiresKey = (eraIndex % 2 === 1); // odd-index eras require key
+      const requiresKey = (eraIndex % 2 === 1); // odd-index eras need key
       let grid = generateMaze(21, 15);
       if (requiresKey) grid = placeKey(grid);
       grid = sprinkleTraps(grid, 5);
       return grid;
     }
 
-    const mazes = ERAS.map((era, i) => ({
-      era,
-      grid: buildMazeForEra(i)
-    }));
+    // ---- Mazes data
+    let mazes = ERAS.map((era, i) => ({ era, grid: buildMazeForEra(i) }));
 
-    // Parse maze for start/goal coords
+    // ---- Parse maze for start/goal
     function parseMaze(level) {
       const grid = mazes[level].grid;
       let start = {x:1, y:1}, goal = {x:grid[0].length-2, y:grid.length-2};
@@ -239,19 +237,19 @@
       return { grid, start, goal };
     }
 
-    // State
+    // ---- Game state
     let currentLevel = 0;
     let maze = parseMaze(currentLevel);
     let pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
-    let vel = { x:0, y:0 };
+    let vel = { x: 0, y: 0 };
     let started = false, paused = false;
+    let hasKey = false;
     const keysDown = new Set();
 
-    // Banner queue
+    // ---- Banner state
     let bannerQueue = [];
     let bannerShowing = false;
     let distAcc = 0;
-    const DIST_PER_SENTENCE = 120;
 
     function showBannerOnce(text) {
       bannerShowing = true;
@@ -266,8 +264,8 @@
     function startEraBanner() {
       const era = mazes[currentLevel].era;
       bannerQueue = [...ERA_TEXT[era]];
-      if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
       distAcc = 0;
+      if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
     }
 
     function maybePopBannerByWalk(deltaDist) {
@@ -281,7 +279,7 @@
       }
     }
 
-    // Collision helpers
+    // ---- Helpers
     function tileAt(px, py) {
       const tx = Math.floor(px / TILE);
       const ty = Math.floor(py / TILE);
@@ -302,10 +300,9 @@
       return false;
     }
 
-    // Movement
+    // ---- Movement & interactions
     function handleKeys(dt) {
-      const era = mazes[currentLevel].era;
-      const speed = 2.6; // uniform speed across eras for consistency
+      const speed = 2.6;
       let dx = 0, dy = 0;
       if (keysDown.has("ArrowUp") || keysDown.has("KeyW")) dy -= 1;
       if (keysDown.has("ArrowDown") || keysDown.has("KeyS")) dy += 1;
@@ -332,9 +329,6 @@
       if (deltaDist > 0) maybePopBannerByWalk(deltaDist);
     }
 
-    // Traps & key logic
-    let hasKey = false;
-
     function checkSpecialTiles() {
       const tx = Math.floor(pos.x / TILE);
       const ty = Math.floor(pos.y / TILE);
@@ -345,24 +339,19 @@
         pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
         return;
       }
-
       if (tile === "K") {
         hasKey = true;
-        maze.grid[ty][tx] = "."; // remove key after pickup
+        maze.grid[ty][tx] = "."; // remove key
         showBannerOnce("You found the key! The exit is now open.");
         return;
       }
-
       if (tile === "G") {
-        // If this era requires a key, enforce it
         const requiresKey = (currentLevel % 2 === 1);
         if (requiresKey && !hasKey) {
           showBannerOnce("The exit is locked. Find the key!");
-          // Nudge player away from the goal tile to avoid camping
-          pos.y -= 6;
+          pos.y -= 6; // small nudge
           return;
         }
-        // Advance to next era or finish
         if (currentLevel < mazes.length - 1) {
           currentLevel++;
           hasKey = false;
@@ -378,7 +367,7 @@
       }
     }
 
-    // Drawing
+    // ---- Rendering
     function drawGrid(theme) {
       ctx.fillStyle = theme.floor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -392,15 +381,12 @@
             ctx.fillStyle = theme.wall;
             ctx.fillRect(px, py, TILE, TILE);
           } else if (tile === "G") {
-            // goal flag
             ctx.fillStyle = "#22c55e";
             ctx.fillRect(px + 8, py + 8, TILE - 16, TILE - 16);
           } else if (tile === "K") {
-            // key
             ctx.fillStyle = "#ffaa00";
             ctx.fillRect(px + 12, py + 12, TILE - 24, TILE - 24);
           } else if (tile === "T") {
-            // trap
             ctx.fillStyle = "#ff3333";
             ctx.beginPath();
             ctx.arc(px + TILE/2, py + TILE/2, TILE/3, 0, Math.PI * 2);
@@ -428,7 +414,7 @@
       drawAvatar(theme);
     }
 
-    // Main loop
+    // ---- Game loop
     let lastTime = 0;
     function loop(timestamp) {
       if (!started || paused) {
@@ -445,12 +431,12 @@
       requestAnimationFrame(loop);
     }
 
-    // Events
+    // ---- Controls
     window.addEventListener("keydown", (e) => {
       if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
       keysDown.add(e.code);
 
-      // G = regenerate current maze (brand-new)
+      // Regenerate maze (G)
       if (e.code === "KeyG") {
         const eraIndex = currentLevel;
         mazes[eraIndex].grid = buildMazeForEra(eraIndex);
@@ -466,24 +452,32 @@
       overlay.style.display = "none";
       started = true;
       paused = false;
+      // ensure fresh state
+      maze = parseMaze(currentLevel);
+      pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
+      hasKey = false;
       startEraBanner();
     });
+
     resetBtn.addEventListener("click", () => {
       overlay.style.display = "grid";
       started = false;
       paused = false;
       currentLevel = 0;
       hasKey = false;
+      // rebuild all mazes to fresh
+      mazes = ERAS.map((era, i) => ({ era, grid: buildMazeForEra(i) }));
       maze = parseMaze(currentLevel);
       pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
       startEraBanner();
     });
+
     pauseBtn.addEventListener("click", () => {
       paused = !paused;
       pauseBtn.textContent = paused ? "Resume" : "Pause";
     });
 
-    // Init
+    // ---- Init
     startEraBanner();
     requestAnimationFrame(loop);
   </script>
