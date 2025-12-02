@@ -29,6 +29,7 @@
     canvas {
       border-radius: 12px;
       image-rendering: pixelated;
+      background: #0a1120;
     }
     #banner {
       position: absolute;
@@ -59,6 +60,7 @@
       border-radius: 12px;
       text-align: center;
       color: #fff;
+      max-width: 640px;
     }
     button {
       background: #ff3355;
@@ -70,6 +72,7 @@
       cursor: pointer;
       font-weight: bold;
     }
+    .controls { margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -82,14 +85,22 @@
     <div id="overlay" class="overlay">
       <div class="card">
         <h2>Press Play to Begin</h2>
-        <p>Use W A S D or Arrow Keys to move.<br>Collect keys if required to unlock exits.<br>Press G to regenerate maze.</p>
-        <button id="playBtn">Play</button>
-        <button id="resetBtn">Reset</button>
-        <button id="pauseBtn">Pause</button>
+        <p>
+          Use W A S D or Arrow Keys to move.<br>
+          Collect keys if required to unlock exits.<br>
+          Avoid traps (red circles).<br>
+          Press G to regenerate the current maze.
+        </p>
+        <div class="controls">
+          <button id="playBtn">Play</button>
+          <button id="resetBtn">Reset</button>
+          <button id="pauseBtn">Pause</button>
+        </div>
       </div>
     </div>
   </div>
   <script>
+    // Canvas & constants
     const TILE = 40;
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
@@ -99,7 +110,7 @@
     const resetBtn = document.getElementById("resetBtn");
     const pauseBtn = document.getElementById("pauseBtn");
 
-    // Era themes
+    // Themes per era (colors)
     const THEMES = {
       "2006": { wall:"#1b2a41", floor:"#0a1324", avatar:"#a2ff00" },
       "2012": { wall:"#3a1b41", floor:"#1a0a24", avatar:"#00ffff" },
@@ -110,7 +121,7 @@
       "2025": { wall:"#2e4a88", floor:"#121f3e", avatar:"#ff3355" }
     };
 
-    // Narratives
+    // Era narratives
     const ERA_TEXT = {
       "2006": ["Era 2006 • 6-bit avatar","Roblox launched as a physics sandbox.","Tickets & Robux shaped the early economy."],
       "2012": ["Era 2012 • 8-bit avatar","Badges and improved avatars.","Community events expanded."],
@@ -125,84 +136,356 @@
     const BANNER_SHOW_MS = 8000;
     const BANNER_FADE_MS = 1500;
 
-    // Maze generator (DFS)
-    function generateMaze(width, height, requiresKey=false) {
-      let grid = Array.from({length:height},()=>Array(width).fill("#"));
-      function carve(x,y){
-        const dirs=[[2,0],[-2,0],[0,2],[0,-2]];
-        for(let [dx,dy] of dirs.sort(()=>Math.random()-0.5)){
-          let nx=x+dx, ny=y+dy;
-          if(nx>0&&ny>0&&nx<width-1&&ny<height-1 && grid[ny][nx]==="#"){
-            grid[ny][nx]=".";
-            grid[y+dy/2][x+dx/2]=".";
-            carve(nx,ny);
+    // Eras list
+    const ERAS = ["2006","2012","2015","2016","2018","2020","2025"];
+
+    // Random maze generator (DFS on odd cells)
+    function generateMaze(width, height) {
+      // Ensure odd dimensions for proper carving
+      if (width % 2 === 0) width += 1;
+      if (height % 2 === 0) height += 1;
+      const grid = Array.from({length:height}, () => Array(width).fill("#"));
+
+      function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+      function carve(cx, cy) {
+        const dirs = shuffle([[2,0],[-2,0],[0,2],[0,-2]]);
+        for (const [dx, dy] of dirs) {
+          const nx = cx + dx, ny = cy + dy;
+          if (ny > 0 && ny < height-1 && nx > 0 && nx < width-1 && grid[ny][nx] === "#") {
+            grid[ny][nx] = ".";
+            grid[cy + dy/2][cx + dx/2] = ".";
+            carve(nx, ny);
           }
         }
       }
-      grid[1][1]="S";
-      carve(1,1);
-      grid[height-2][width-2]="G";
-      if(requiresKey) grid[Math.floor(height/2)][Math.floor(width/2)]="K";
-      return grid;
-    }
 
-    // Sprinkle traps
-    function sprinkleTraps(grid,count=5){
-      let coords=[];
-      for(let y=1;y<grid.length-1;y++){
-        for(let x=1;x<grid[y].length-1;x++){
-          if(grid[y][x]===".") coords.push([x,y]);
+      // Start and carve
+      grid[1][1] = ".";
+      carve(1, 1);
+
+      // Place start and goal on open tiles near corners
+      grid[1][1] = "S";
+      grid[height-2][width-2] = ".";
+      // Find nearest open tile to bottom-right for G
+      let gx = width-2, gy = height-2;
+      for (let y = height-2; y >= 1; y--) {
+        for (let x = width-2; x >= 1; x--) {
+          if (grid[y][x] === ".") { gx = x; gy = y; y = 0; break; }
         }
       }
-      for(let i=0;i<count;i++){
-        let [x,y]=coords[Math.floor(Math.random()*coords.length)];
-        grid[y][x]="T";
+      grid[gy][gx] = "G";
+
+      return grid;
+    }
+
+    // Sprinkle traps on open floor tiles (avoid start/goal)
+    function sprinkleTraps(grid, count = 5) {
+      const coords = [];
+      for (let y = 1; y < grid.length-1; y++) {
+        for (let x = 1; x < grid[y].length-1; x++) {
+          if (grid[y][x] === "." ) coords.push([x,y]);
+        }
+      }
+      for (let i = 0; i < Math.min(count, coords.length); i++) {
+        const [x,y] = coords[Math.floor(Math.random()*coords.length)];
+        // Avoid overwriting start/goal
+        if (grid[y][x] === "." ) grid[y][x] = "T";
       }
       return grid;
     }
 
-    // Build 7 mazes
-    const eras=["2006","2012","2015","2016","2018","2020","2025"];
-    let mazes=eras.map((era,i)=>({
+    // Place a key somewhere reachable (centerish) if required
+    function placeKey(grid) {
+      // Try center region, fall back to any open tile
+      const cy = Math.floor(grid.length/2);
+      const cx = Math.floor(grid[0].length/2);
+      if (grid[cy][cx] === ".") {
+        grid[cy][cx] = "K";
+        return grid;
+      }
+      for (let y = 1; y < grid.length-1; y++) {
+        for (let x = 1; x < grid[y].length-1; x++) {
+          if (grid[y][x] === ".") { grid[y][x] = "K"; return grid; }
+        }
+      }
+      return grid;
+    }
+
+    // Build initial mazes per era
+    function buildMazeForEra(eraIndex) {
+      const requiresKey = (eraIndex % 2 === 1); // odd-index eras require key
+      let grid = generateMaze(21, 15);
+      if (requiresKey) grid = placeKey(grid);
+      grid = sprinkleTraps(grid, 5);
+      return grid;
+    }
+
+    const mazes = ERAS.map((era, i) => ({
       era,
-      grid: sprinkleTraps(generateMaze(21,15,i%2===1),5)
+      grid: buildMazeForEra(i)
     }));
 
+    // Parse maze for start/goal coords
+    function parseMaze(level) {
+      const grid = mazes[level].grid;
+      let start = {x:1, y:1}, goal = {x:grid[0].length-2, y:grid.length-2};
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          if (grid[y][x] === "S") start = {x, y};
+          if (grid[y][x] === "G") goal = {x, y};
+        }
+      }
+      return { grid, start, goal };
+    }
+
     // State
-    let currentLevel=0;
-    let pos={x:0,y:0};
-    let vel={x:0,y:0};
-    let started=false, paused=false;
-    let keysHeld=new Set();
-    let bannerQueue=[], bannerShowing=false, distAcc=0;
-    let maze=parseMaze(currentLevel);
+    let currentLevel = 0;
+    let maze = parseMaze(currentLevel);
+    let pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
+    let vel = { x:0, y:0 };
+    let started = false, paused = false;
+    const keysDown = new Set();
 
-    function showBannerOnce(text){
-      bannerShowing=true;
-      bannerEl.textContent=text;
+    // Banner queue
+    let bannerQueue = [];
+    let bannerShowing = false;
+    let distAcc = 0;
+    const DIST_PER_SENTENCE = 120;
+
+    function showBannerOnce(text) {
+      bannerShowing = true;
+      bannerEl.textContent = text;
       bannerEl.classList.add("show");
-      setTimeout(()=>{
+      setTimeout(() => {
         bannerEl.classList.remove("show");
-        setTimeout(()=>{bannerShowing=false; bannerEl.textContent="";},BANNER_FADE_MS);
-      },BANNER_SHOW_MS);
+        setTimeout(() => { bannerShowing = false; bannerEl.textContent = ""; }, BANNER_FADE_MS);
+      }, BANNER_SHOW_MS);
     }
 
-    function parseMaze(level){
-      const grid=mazes[level].grid;
-      let start={x:1,y:1}, goal={x:grid[0].length-2,y:grid.length-2};
-      return {grid,start,goal};
+    function startEraBanner() {
+      const era = mazes[currentLevel].era;
+      bannerQueue = [...ERA_TEXT[era]];
+      if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
+      distAcc = 0;
     }
 
-    function resetLevel(level=0){
-      currentLevel=level;
-      maze=parseMaze(currentLevel);
-      pos={x:maze.start.x*TILE+TILE/2,y:maze.start.y*TILE+TILE/2};
-      vel={x:0,y:0};
-      bannerQueue=[...ERA_TEXT[mazes[currentLevel].era]];
-      if(bannerQueue.length) showBannerOnce(bannerQueue.shift());
+    function maybePopBannerByWalk(deltaDist) {
+      if (!started || paused) return;
+      distAcc += deltaDist;
+      if (bannerShowing) return;
+      if (bannerQueue.length === 0) return;
+      if (distAcc >= DIST_PER_SENTENCE) {
+        distAcc = 0;
+        showBannerOnce(bannerQueue.shift());
+      }
     }
 
-    function drawGrid(theme,grid){
-      ctx.fillStyle=theme.floor;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      for(let y=0;y
+    // Collision helpers
+    function tileAt(px, py) {
+      const tx = Math.floor(px / TILE);
+      const ty = Math.floor(py / TILE);
+      if (ty < 0 || ty >= maze.grid.length || tx < 0 || tx >= maze.grid[0].length) return "#";
+      return maze.grid[ty][tx];
+    }
+
+    function collide(nextX, nextY, radius = 12) {
+      const points = [
+        { x: nextX - radius, y: nextY - radius },
+        { x: nextX + radius, y: nextY - radius },
+        { x: nextX - radius, y: nextY + radius },
+        { x: nextX + radius, y: nextY + radius },
+      ];
+      for (const p of points) {
+        if (tileAt(p.x, p.y) === "#") return true;
+      }
+      return false;
+    }
+
+    // Movement
+    function handleKeys(dt) {
+      const era = mazes[currentLevel].era;
+      const speed = 2.6; // uniform speed across eras for consistency
+      let dx = 0, dy = 0;
+      if (keysDown.has("ArrowUp") || keysDown.has("KeyW")) dy -= 1;
+      if (keysDown.has("ArrowDown") || keysDown.has("KeyS")) dy += 1;
+      if (keysDown.has("ArrowLeft") || keysDown.has("KeyA")) dx -= 1;
+      if (keysDown.has("ArrowRight") || keysDown.has("KeyD")) dx += 1;
+
+      const prevX = pos.x, prevY = pos.y;
+
+      if (dx || dy) {
+        const len = Math.hypot(dx, dy) || 1;
+        vel.x = (dx / len) * speed * TILE * (dt / 1000);
+        vel.y = (dy / len) * speed * TILE * (dt / 1000);
+      } else {
+        vel.x = 0; vel.y = 0;
+      }
+
+      const nextX = pos.x + vel.x;
+      const nextY = pos.y + vel.y;
+
+      if (!collide(nextX, pos.y)) pos.x = nextX;
+      if (!collide(pos.x, nextY)) pos.y = nextY;
+
+      const deltaDist = Math.hypot(pos.x - prevX, pos.y - prevY);
+      if (deltaDist > 0) maybePopBannerByWalk(deltaDist);
+    }
+
+    // Traps & key logic
+    let hasKey = false;
+
+    function checkSpecialTiles() {
+      const tx = Math.floor(pos.x / TILE);
+      const ty = Math.floor(pos.y / TILE);
+      const tile = maze.grid[ty][tx];
+
+      if (tile === "T") {
+        showBannerOnce("You hit a trap! Back to start.");
+        pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
+        return;
+      }
+
+      if (tile === "K") {
+        hasKey = true;
+        maze.grid[ty][tx] = "."; // remove key after pickup
+        showBannerOnce("You found the key! The exit is now open.");
+        return;
+      }
+
+      if (tile === "G") {
+        // If this era requires a key, enforce it
+        const requiresKey = (currentLevel % 2 === 1);
+        if (requiresKey && !hasKey) {
+          showBannerOnce("The exit is locked. Find the key!");
+          // Nudge player away from the goal tile to avoid camping
+          pos.y -= 6;
+          return;
+        }
+        // Advance to next era or finish
+        if (currentLevel < mazes.length - 1) {
+          currentLevel++;
+          hasKey = false;
+          maze = parseMaze(currentLevel);
+          pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
+          startEraBanner();
+          showBannerOnce(`Advancing to ${mazes[currentLevel].era}`);
+        } else {
+          showBannerOnce("Finale reached! Thanks for exploring the Roblox evolution.");
+          paused = true;
+          overlay.style.display = "grid";
+        }
+      }
+    }
+
+    // Drawing
+    function drawGrid(theme) {
+      ctx.fillStyle = theme.floor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < maze.grid.length; y++) {
+        for (let x = 0; x < maze.grid[y].length; x++) {
+          const tile = maze.grid[y][x];
+          const px = x * TILE, py = y * TILE;
+
+          if (tile === "#") {
+            ctx.fillStyle = theme.wall;
+            ctx.fillRect(px, py, TILE, TILE);
+          } else if (tile === "G") {
+            // goal flag
+            ctx.fillStyle = "#22c55e";
+            ctx.fillRect(px + 8, py + 8, TILE - 16, TILE - 16);
+          } else if (tile === "K") {
+            // key
+            ctx.fillStyle = "#ffaa00";
+            ctx.fillRect(px + 12, py + 12, TILE - 24, TILE - 24);
+          } else if (tile === "T") {
+            // trap
+            ctx.fillStyle = "#ff3333";
+            ctx.beginPath();
+            ctx.arc(px + TILE/2, py + TILE/2, TILE/3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    function drawAvatar(theme) {
+      const size = 24;
+      ctx.fillStyle = theme.avatar;
+      ctx.fillRect(pos.x - size/2, pos.y - size/2, size, size);
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.fillRect(pos.x - size/2 + 3, pos.y - size/2 + 6, size - 6, 4);
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y + size/2, size/2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function draw() {
+      const theme = THEMES[mazes[currentLevel].era];
+      drawGrid(theme);
+      drawAvatar(theme);
+    }
+
+    // Main loop
+    let lastTime = 0;
+    function loop(timestamp) {
+      if (!started || paused) {
+        lastTime = timestamp;
+        draw();
+        requestAnimationFrame(loop);
+        return;
+      }
+      const dt = timestamp - lastTime;
+      lastTime = timestamp;
+      handleKeys(dt);
+      checkSpecialTiles();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // Events
+    window.addEventListener("keydown", (e) => {
+      if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
+      keysDown.add(e.code);
+
+      // G = regenerate current maze (brand-new)
+      if (e.code === "KeyG") {
+        const eraIndex = currentLevel;
+        mazes[eraIndex].grid = buildMazeForEra(eraIndex);
+        maze = parseMaze(currentLevel);
+        hasKey = false;
+        pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
+        showBannerOnce("New maze generated with G key.");
+      }
+    });
+    window.addEventListener("keyup", (e) => { keysDown.delete(e.code); });
+
+    playBtn.addEventListener("click", () => {
+      overlay.style.display = "none";
+      started = true;
+      paused = false;
+      startEraBanner();
+    });
+    resetBtn.addEventListener("click", () => {
+      overlay.style.display = "grid";
+      started = false;
+      paused = false;
+      currentLevel = 0;
+      hasKey = false;
+      maze = parseMaze(currentLevel);
+      pos = { x: maze.start.x*TILE + TILE/2, y: maze.start.y*TILE + TILE/2 };
+      startEraBanner();
+    });
+    pauseBtn.addEventListener("click", () => {
+      paused = !paused;
+      pauseBtn.textContent = paused ? "Resume" : "Pause";
+    });
+
+    // Init
+    startEraBanner();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
