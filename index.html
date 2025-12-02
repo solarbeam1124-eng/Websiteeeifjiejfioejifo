@@ -2,511 +2,207 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Roblox PIP how has roblox change since it was first launched</title>
+  <title>Roblox Evolution Maze</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --bg: #0b1220;
-      --text: #eaf2ff;
-      --btn: #ff3355;
-      --btnText: #ffffff;
-    }
-    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% 10%, #0f1d3a 0%, #0b1220 60%, #050a16 100%);
-      color: var(--text);
-      min-height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
+      font-family: system-ui, sans-serif;
+      background: #0b1220;
+      color: #eaf2ff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
     header {
-      padding: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
+      padding: 12px;
+      background: #111a33;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    header h1 { margin: 0; font-size: 22px; letter-spacing: 0.3px; }
-    header .subtitle { opacity: 0.8; font-size: 13px; margin-top: 6px; }
-
-    main { padding: 12px; }
+    header h1 { margin: 0; font-size: 20px; }
     #stage {
-      background: #0a1120;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
-      position: relative;
-      overflow: hidden;
-      min-height: 560px;
+      flex: 1;
       display: grid;
       place-items: center;
+      position: relative;
     }
     canvas {
-      width: 100%;
-      height: 100%;
-      max-width: 980px;
-      max-height: 560px;
       border-radius: 12px;
       image-rendering: pixelated;
     }
+    #banner {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18,26,42,0.85);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 1s ease;
+      max-width: 80%;
+      text-align: center;
+    }
+    #banner.show { opacity: 1; }
     .overlay {
       position: absolute;
       inset: 0;
       display: grid;
       place-items: center;
-      background: radial-gradient(500px 300px at 50% 10%, rgba(255,255,255,0.06), rgba(0,0,0,0.4));
+      background: rgba(0,0,0,0.5);
     }
     .card {
-      background: rgba(18,26,42,0.85);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(6px);
-      padding: 18px;
+      background: #1a243f;
+      padding: 20px;
       border-radius: 12px;
-      max-width: 640px;
       text-align: center;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 8px 0 14px;
-    }
-    .chip {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      padding: 8px;
-      border-radius: 10px;
-      font-size: 12px;
+      color: #fff;
     }
     button {
-      appearance: none;
-      background: var(--btn);
-      color: var(--btnText);
+      background: #ff3355;
+      color: #fff;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 10px 14px;
-      font-weight: 600;
+      margin: 5px;
       cursor: pointer;
-      transition: transform 0.08s ease, filter 0.12s ease;
-    }
-    button:hover { filter: brightness(1.05); }
-    button:active { transform: translateY(1px); }
-    .controls {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 10px;
-    }
-
-    /* Top banner narrative */
-    #banner {
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(18,26,42,0.85);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: var(--text);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 14px;
-      line-height: 1.35;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 1.0s ease;
-      max-width: 84%;
-      text-align: center;
-      backdrop-filter: blur(4px);
-    }
-    #banner.show { opacity: 1; }
-
-    footer {
-      padding: 14px;
-      opacity: 0.75;
-      font-size: 12px;
-      text-align: center;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>ROBLOX Evolution Maze</h1>
-    <div class="subtitle">Full-screen mazes with era-specific narration. Use W A S D or Arrow Keys.</div>
+    <h1>Roblox Evolution Maze</h1>
   </header>
-
-  <main>
-    <section id="stage">
-      <canvas id="game" width="980" height="560"></canvas>
-      <div id="banner"></div>
-      <div id="overlay" class="overlay">
-        <div class="card">
-          <div style="font-weight:800; margin-bottom:8px;">Press Play to Begin</div>
-          <div>Reach the flag in each maze to advance eras. W A S D or Arrow Keys to move.</div>
-          <div class="grid">
-            <div class="chip">2006 • 6‑bit avatar</div>
-            <div class="chip">2016 • 16‑bit avatar</div>
-            <div class="chip">2025 • Bacon avatar</div>
-          </div>
-          <div class="controls">
-            <button id="playBtn">Play</button>
-            <button id="resetBtn" title="Restart from era 2006">Reset</button>
-            <button id="pauseBtn">Pause</button>
-          </div>
-        </div>
+  <div id="stage">
+    <canvas id="game" width="960" height="560"></canvas>
+    <div id="banner"></div>
+    <div id="overlay" class="overlay">
+      <div class="card">
+        <h2>Press Play to Begin</h2>
+        <p>Use W A S D or Arrow Keys to move.<br>Collect keys if required to unlock exits.<br>Press G to regenerate maze.</p>
+        <button id="playBtn">Play</button>
+        <button id="resetBtn">Reset</button>
+        <button id="pauseBtn">Pause</button>
       </div>
-    </section>
-  </main>
-
-  <footer>
-    Tip: Hug the walls and watch for openings. Each era’s text appears at the top as you walk.
-  </footer>
-
+    </div>
+  </div>
   <script>
-    // --- Constants & themes
     const TILE = 40;
-    const SPEEDS = { "2006": 2.2, "2016": 2.8, "2025": 3.3 };
-    const THEMES = {
-      "2006": { wall: "#1b2a41", floor: "#0a1324", avatar: "#a2ff00", detail: 6 },
-      "2016": { wall: "#263b66", floor: "#101b33", avatar: "#ffcc00", detail: 16 },
-      "2025": { wall: "#2e4a88", floor: "#121f3e", avatar: "#ff3355", detail: 32 } // Bacon vibe
-    };
-
-    // --- Era narratives (each era has its own text)
-    const ERA_TEXT = {
-      "2006": [
-        "Era 2006 • 6‑bit avatar",
-        "Roblox launched as a physics sandbox with user-generated worlds.",
-        "Early avatars were simple blocky figures and classic hats.",
-        "Community scripts and basic building tools drove creativity.",
-        "Dual currency (Tickets & Robux) shaped the early economy."
-      ],
-      "2016": [
-        "Era 2016 • 16‑bit avatar",
-        "Roblox Studio matured with plugins and better publishing.",
-        "Shift toward Robux-only economy simplified transactions.",
-        "Mobile and console support broadened access worldwide.",
-        "Emerging dev marketplace and events boosted creators."
-      ],
-      "2025": [
-        "Era 2025 • Bacon avatar",
-        "Roblox is a social/creative hub with concerts & education.",
-        "Millions of experiences across genres, global community.",
-        "Creators earn income; UGC and brands expand the ecosystem.",
-        "Cross-platform, VR experiments, and evolving avatar fidelity."
-      ]
-    };
-
-    // --- Mazes (solvable)
-    // Legend: #=wall, .=path, S=start, G=goal
-    const mazes = [
-      { // 2006: compact, solvable
-        era: "2006",
-        grid: [
-          "###############",
-          "#S.....#.....G#",
-          "#.###..#..###.#",
-          "#...#..#..#...#",
-          "###.#..####.#.#",
-          "#...#.......#.#",
-          "#.#####.#####.#",
-          "#.....#.#.....#",
-          "###.#.#.#.###.#",
-          "#...#...#...#.#",
-          "#.#######.#.#.#",
-          "#.....#...#...#",
-          "#####.#.#####.#",
-          "#.....#.......#",
-          "###############"
-        ]
-      },
-      { // 2016: widened corridors, ensured route from S to G
-        era: "2016",
-        grid: [
-          "####################",
-          "#S..#.....#.......G#",
-          "#.#.#.###.#.####.#.#",
-          "#.#...#..........#.#",
-          "#.#####.#####.#.#..#",
-          "#.....#.....#.#...##",
-          "###.#.#.###.#.###..#",
-          "#...#.#...#.#...#..#",
-          "#.###.###.#.###.#..#",
-          "#...#.....#.....#..#",
-          "###.#######.#####..#",
-          "#...#.....#.....#..#",
-          "##.#.#.###.#.###.#.#",
-          "#.....#...#.....#..#",
-          "####################"
-        ]
-      },
-      { // 2025: longer, but with multiple clear passages
-        era: "2025",
-        grid: [
-          "########################",
-          "#S.....#....#.......#..#",
-          "#.###..#.##.#.#######..#",
-          "#...#..#....#.....#....#",
-          "###.#..######.###.#.####",
-          "#...#.......#...#.#....#",
-          "#.#####.#####.#.#.####.#",
-          "#.....#.#.....#.#....#.#",
-          "###.#.#.#.###.#.##.G.#.#",
-          "#...#..............#.#.#",
-          "#.#######.#.#.###..#.#.#",
-          "#.....#...#...#..#.#.#.#",
-          "#####.#.#####.#.##.#.#.#",
-          "#.....#.......#....#...#",
-          "#.###.#.#####.#.###.#..#",
-          "#...#.#.....#.#...#.#..#",
-          "########################"
-        ]
-      }
-    ];
-
-    // --- DOM
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
+    const bannerEl = document.getElementById("banner");
     const overlay = document.getElementById("overlay");
     const playBtn = document.getElementById("playBtn");
     const resetBtn = document.getElementById("resetBtn");
     const pauseBtn = document.getElementById("pauseBtn");
-    const bannerEl = document.getElementById("banner");
 
-    // --- State
-    let currentLevel = 0;
-    let pos = { x: 0, y: 0 };
-    let vel = { x: 0, y: 0 };
-    let started = false;
-    let paused = false;
-    let startTime = 0;
-    let lastTime = 0;
-    const keys = new Set();
+    // Era themes
+    const THEMES = {
+      "2006": { wall:"#1b2a41", floor:"#0a1324", avatar:"#a2ff00" },
+      "2012": { wall:"#3a1b41", floor:"#1a0a24", avatar:"#00ffff" },
+      "2015": { wall:"#224466", floor:"#112233", avatar:"#ff8800" },
+      "2016": { wall:"#263b66", floor:"#101b33", avatar:"#ffcc00" },
+      "2018": { wall:"#4a2e88", floor:"#1f123e", avatar:"#ff66cc" },
+      "2020": { wall:"#2e884a", floor:"#123e1f", avatar:"#66ffcc" },
+      "2025": { wall:"#2e4a88", floor:"#121f3e", avatar:"#ff3355" }
+    };
 
-    // Banner state
-    let bannerQueue = [];
-    let bannerShowing = false;
-    let distAcc = 0;
-    const DIST_PER_SENTENCE = 120;
-    const BANNER_SHOW_MS = 2800;
-    const BANNER_FADE_MS = 1000;
+    // Narratives
+    const ERA_TEXT = {
+      "2006": ["Era 2006 • 6-bit avatar","Roblox launched as a physics sandbox.","Tickets & Robux shaped the early economy."],
+      "2012": ["Era 2012 • 8-bit avatar","Badges and improved avatars.","Community events expanded."],
+      "2015": ["Era 2015 • 12-bit avatar","DevEx program launched.","Economy matured."],
+      "2016": ["Era 2016 • 16-bit avatar","Mobile & console support.","Marketplace boosted creators."],
+      "2018": ["Era 2018 • 20-bit avatar","UGC marketplace expanded.","Plugins improved Studio."],
+      "2020": ["Era 2020 • 24-bit avatar","Virtual concerts & global events.","Massive growth."],
+      "2025": ["Era 2025 • Bacon avatar","VR & brands integrated.","Social hub."]
+    };
 
-    // --- Helpers
-    function showBannerOnce(text) {
-      bannerShowing = true;
-      bannerEl.textContent = text;
-      bannerEl.classList.add("show");
-      setTimeout(() => {
-        bannerEl.classList.remove("show");
-        setTimeout(() => {
-          bannerShowing = false;
-          bannerEl.textContent = "";
-        }, BANNER_FADE_MS);
-      }, BANNER_SHOW_MS);
-    }
+    // Banner timing
+    const BANNER_SHOW_MS = 8000;
+    const BANNER_FADE_MS = 1500;
 
-    function maybePopBannerByWalk(deltaDist) {
-      if (!started || paused) return;
-      distAcc += deltaDist;
-      if (bannerShowing) return;
-      if (bannerQueue.length === 0) return;
-      if (distAcc >= DIST_PER_SENTENCE) {
-        distAcc = 0;
-        const next = bannerQueue.shift();
-        showBannerOnce(next);
-      }
-    }
-
-    function parseMaze(level) {
-      const grid = mazes[level].grid.map(r => r.split(""));
-      let start = { x: 1, y: 1 }, goal = { x: 1, y: 1 };
-      for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[y].length; x++) {
-          if (grid[y][x] === "S") start = { x, y };
-          if (grid[y][x] === "G") goal = { x, y };
-        }
-      }
-      return { grid, start, goal };
-    }
-
-    let maze = parseMaze(currentLevel);
-
-    function resetLevel(level = 0) {
-      currentLevel = level;
-      maze = parseMaze(currentLevel);
-      const era = mazes[currentLevel].era;
-      pos = { x: maze.start.x * TILE + TILE/2, y: maze.start.y * TILE + TILE/2 };
-      vel = { x: 0, y: 0 };
-      // Prepare banner for era
-      bannerQueue = [...ERA_TEXT[era]];
-      distAcc = 0;
-      // Announce the first line immediately
-      if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
-      draw(0);
-    }
-
-    function tileAt(px, py) {
-      const tx = Math.floor(px / TILE);
-      const ty = Math.floor(py / TILE);
-      if (ty < 0 || ty >= maze.grid.length || tx < 0 || tx >= maze.grid[0].length) return "#";
-      return maze.grid[ty][tx];
-    }
-
-    function collide(nextX, nextY, radius = 12) {
-      const points = [
-        { x: nextX - radius, y: nextY - radius },
-        { x: nextX + radius, y: nextY - radius },
-        { x: nextX - radius, y: nextY + radius },
-        { x: nextX + radius, y: nextY + radius },
-      ];
-      for (const p of points) {
-        if (tileAt(p.x, p.y) === "#") return true;
-      }
-      return false;
-    }
-
-    function handleKeys(dt) {
-      const era = mazes[currentLevel].era;
-      const speed = SPEEDS[era];
-      let dx = 0, dy = 0;
-      if (keys.has("ArrowUp") || keys.has("KeyW")) dy -= 1;
-      if (keys.has("ArrowDown") || keys.has("KeyS")) dy += 1;
-      if (keys.has("ArrowLeft") || keys.has("KeyA")) dx -= 1;
-      if (keys.has("ArrowRight") || keys.has("KeyD")) dx += 1;
-
-      const prevX = pos.x, prevY = pos.y;
-
-      if (dx || dy) {
-        const len = Math.hypot(dx, dy) || 1;
-        vel.x = (dx / len) * speed * TILE * (dt / 1000);
-        vel.y = (dy / len) * speed * TILE * (dt / 1000);
-      } else {
-        vel.x = 0; vel.y = 0;
-      }
-      const nextX = pos.x + vel.x;
-      const nextY = pos.y + vel.y;
-
-      if (!collide(nextX, pos.y)) pos.x = nextX;
-      if (!collide(pos.x, nextY)) pos.y = nextY;
-
-      const deltaDist = Math.hypot(pos.x - prevX, pos.y - prevY);
-      if (deltaDist > 0) maybePopBannerByWalk(deltaDist);
-    }
-
-    function drawGrid(theme) {
-      ctx.fillStyle = theme.floor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      for (let y = 0; y < maze.grid.length; y++) {
-        for (let x = 0; x < maze.grid[y].length; x++) {
-          const tile = maze.grid[y][x];
-          const px = x * TILE, py = y * TILE;
-          if (tile === "#") {
-            ctx.fillStyle = theme.wall;
-            ctx.fillRect(px, py, TILE, TILE);
-          } else if (tile === "G") {
-            ctx.fillStyle = "#22c55e";
-            ctx.fillRect(px + 8, py + 8, TILE - 16, TILE - 16);
-            ctx.fillStyle = "#14a34a";
-            ctx.fillRect(px + TILE/2 - 2, py + 6, 4, TILE - 12);
-            ctx.fillStyle = "#eaffea";
-            ctx.beginPath();
-            ctx.moveTo(px + TILE/2, py + 10);
-            ctx.lineTo(px + TILE/2 + 12, py + 16);
-            ctx.lineTo(px + TILE/2, py + 22);
-            ctx.closePath();
-            ctx.fill();
+    // Maze generator (DFS)
+    function generateMaze(width, height, requiresKey=false) {
+      let grid = Array.from({length:height},()=>Array(width).fill("#"));
+      function carve(x,y){
+        const dirs=[[2,0],[-2,0],[0,2],[0,-2]];
+        for(let [dx,dy] of dirs.sort(()=>Math.random()-0.5)){
+          let nx=x+dx, ny=y+dy;
+          if(nx>0&&ny>0&&nx<width-1&&ny<height-1 && grid[ny][nx]==="#"){
+            grid[ny][nx]=".";
+            grid[y+dy/2][x+dx/2]=".";
+            carve(nx,ny);
           }
         }
       }
+      grid[1][1]="S";
+      carve(1,1);
+      grid[height-2][width-2]="G";
+      if(requiresKey) grid[Math.floor(height/2)][Math.floor(width/2)]="K";
+      return grid;
     }
 
-    function drawAvatar(theme) {
-      const { detail } = theme;
-      const size = 22 + Math.min(detail, 24) * 0.3;
-      ctx.fillStyle = theme.avatar;
-      ctx.fillRect(pos.x - size/2, pos.y - size/2, size, size);
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
-      ctx.fillRect(pos.x - size/2 + 3, pos.y - size/2 + 6, size - 6, 4);
-      if (detail >= 32) {
-        ctx.fillStyle = "#ff667f";
-        ctx.fillRect(pos.x - size/2 + 2, pos.y - size/2 + 2, size - 4, 3);
-        ctx.fillStyle = "#cc2e48";
-        ctx.fillRect(pos.x - size/2 + 2, pos.y - size/2 + 6, size - 4, 3);
-      }
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y + size/2, size/2.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function checkGoal() {
-      const gx = maze.goal.x * TILE + TILE/2;
-      const gy = maze.goal.y * TILE + TILE/2;
-      const d = Math.hypot(pos.x - gx, pos.y - gy);
-      if (d < 20) {
-        if (currentLevel < mazes.length - 1) {
-          currentLevel++;
-          maze = parseMaze(currentLevel);
-          const era = mazes[currentLevel].era;
-          pos = { x: maze.start.x * TILE + TILE/2, y: maze.start.y * TILE + TILE/2 };
-          bannerQueue = [...ERA_TEXT[era]];
-          distAcc = 0;
-          if (bannerQueue.length) showBannerOnce(bannerQueue.shift());
-        } else {
-          bannerQueue = ["Finale reached! Thanks for exploring the Roblox evolution."];
-          showBannerOnce(bannerQueue.shift());
-          paused = true;
+    // Sprinkle traps
+    function sprinkleTraps(grid,count=5){
+      let coords=[];
+      for(let y=1;y<grid.length-1;y++){
+        for(let x=1;x<grid[y].length-1;x++){
+          if(grid[y][x]===".") coords.push([x,y]);
         }
       }
-    }
-
-    function draw(timestamp) {
-      const theme = THEMES[mazes[currentLevel].era];
-      drawGrid(theme);
-      drawAvatar(theme);
-      if (started && !paused) checkGoal();
-    }
-
-    function loop(timestamp) {
-      if (!started || paused) {
-        lastTime = timestamp;
-        draw(timestamp);
-        requestAnimationFrame(loop);
-        return;
+      for(let i=0;i<count;i++){
+        let [x,y]=coords[Math.floor(Math.random()*coords.length)];
+        grid[y][x]="T";
       }
-      const dt = timestamp - lastTime;
-      lastTime = timestamp;
-      handleKeys(dt);
-      draw(timestamp);
-      requestAnimationFrame(loop);
+      return grid;
     }
 
-    // --- Events
-    window.addEventListener("keydown", (e) => {
-      if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
-      keys.add(e.code);
-    });
-    window.addEventListener("keyup", (e) => { keys.delete(e.code); });
+    // Build 7 mazes
+    const eras=["2006","2012","2015","2016","2018","2020","2025"];
+    let mazes=eras.map((era,i)=>({
+      era,
+      grid: sprinkleTraps(generateMaze(21,15,i%2===1),5)
+    }));
 
-    document.getElementById("playBtn").addEventListener("click", () => {
-      overlay.style.display = "none";
-      started = true;
-      paused = false;
-      startTime = performance.now();
-    });
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      overlay.style.display = "grid";
-      started = false;
-      paused = false;
-      resetLevel(0);
-    });
-    document.getElementById("pauseBtn").addEventListener("click", () => {
-      paused = !paused;
-      document.getElementById("pauseBtn").textContent = paused ? "Resume" : "Pause";
-    });
+    // State
+    let currentLevel=0;
+    let pos={x:0,y:0};
+    let vel={x:0,y:0};
+    let started=false, paused=false;
+    let keysHeld=new Set();
+    let bannerQueue=[], bannerShowing=false, distAcc=0;
+    let maze=parseMaze(currentLevel);
 
-    // --- Init
-    resetLevel(0);
-    requestAnimationFrame(loop);
-  </script>
-</body>
-</html>
+    function showBannerOnce(text){
+      bannerShowing=true;
+      bannerEl.textContent=text;
+      bannerEl.classList.add("show");
+      setTimeout(()=>{
+        bannerEl.classList.remove("show");
+        setTimeout(()=>{bannerShowing=false; bannerEl.textContent="";},BANNER_FADE_MS);
+      },BANNER_SHOW_MS);
+    }
+
+    function parseMaze(level){
+      const grid=mazes[level].grid;
+      let start={x:1,y:1}, goal={x:grid[0].length-2,y:grid.length-2};
+      return {grid,start,goal};
+    }
+
+    function resetLevel(level=0){
+      currentLevel=level;
+      maze=parseMaze(currentLevel);
+      pos={x:maze.start.x*TILE+TILE/2,y:maze.start.y*TILE+TILE/2};
+      vel={x:0,y:0};
+      bannerQueue=[...ERA_TEXT[mazes[currentLevel].era]];
+      if(bannerQueue.length) showBannerOnce(bannerQueue.shift());
+    }
+
+    function drawGrid(theme,grid){
+      ctx.fillStyle=theme.floor;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(let y=0;y
