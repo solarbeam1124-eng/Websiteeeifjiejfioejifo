@@ -8,8 +8,18 @@
 </head>
 <body>
   <canvas id="game" width="960" height="540"></canvas>
-  <div id="overlay" class="hidden"></div>
-  <div id="status"></div>
+
+  <div id="ui">
+    <div id="title">Rhythm Dash · Roblox timeline</div>
+    <div id="controls">
+      <span>Space: Jump</span> · <span>R: Restart</span> · <span>N: Next level</span> · <span>Esc: Menu</span>
+    </div>
+    <div id="overlay" class="hidden"></div>
+    <div id="status"></div>
+  </div>
+
+  <!-- Beat pulse bar (created by game.js if not present) -->
+  <div class="beat" id="beatbar"></div>
 
   <script src="menu.js"></script>
   <script src="game.js"></script>
