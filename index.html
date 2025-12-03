@@ -2,22 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>solar dash – Roblox Timeline - made by xavier</title>
+  <title>Rhythm Dash – Roblox Timeline</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <canvas id="game" width="960" height="540"></canvas>
+  <div id="overlay" class="hidden"></div>
+  <div id="status"></div>
 
-  <div id="ui">
-    <div id="title">Rhythm Dash · Roblox timeline</div>
-    <div id="controls">
-      <span>Space: Jump</span> · <span>R: Restart level</span> · <span>N: Next level</span>
-    </div>
-    <div id="overlay" class="hidden"></div>
-    <div id="status"></div>
-  </div>
-
+  <script src="menu.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
